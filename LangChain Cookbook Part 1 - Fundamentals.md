@@ -37,6 +37,58 @@ Document(page_content="This is my document. It is full of text that I've gathere
 | **Chat model**       | `ChatOpenAI(temperature, openai_api_key)` | chatMessages  | a chatMessage  |
 | **TextEmbedding model** | `OpenAIEmbeddings(openai_api_key)` | text            | vector       |
 
+
+### Chain
+
+Use `LLMChain` to create a **Chain Component**.
+
+Chain 1:
+
+```python
+
+template = """Your job is to come up with a classic dish from the area that the users suggests, and only respond the short dish name
+% USER LOCATION
+{user_location}
+
+YOUR RESPONSE:
+"""
+prompt_template = PromptTemplate(input_variables=["user_location"], template=template)
+
+# Holds my 'location' chain
+location_chain = LLMChain(llm=chat, prompt=prompt_template)
+
+
+
+```
+
+Chain 2:
+
+```python
+
+template = """Given a meal, give a short and simple recipe on how to make that dish at home. please respond in a very structured way.
+% MEAL
+{user_meal}
+
+YOUR RESPONSE:
+"""
+prompt_template = PromptTemplate(input_variables=["user_meal"], template=template)
+
+# Holds my 'meal' chain
+meal_chain = LLMChain(llm=chat, prompt=prompt_template)
+
+
+```
+
+Link them as a LONG CHAIN:
+
+```python
+
+overall_chain = SimpleSequentialChain(chains=[location_chain, meal_chain], verbose=True)
+print(overall_chain.run("Rome"))
+
+```
+
+
 ### Tools
 
 | Tools            | Example                                      | Usage             | Input | Output                                          |
@@ -53,6 +105,27 @@ Document(page_content="This is my document. It is full of text that I've gathere
 
 ## Capablities
 
+
+### Basic
+
+```python
+
+chat = ChatOpenAI(model='gpt-3.5-turbo', temperature=1, openai_api_key=openai_api_key)
+# chat = ChatGoogleGenerativeAI(model='gemini-1.5-pro', temperature=0, google_api_key=google_api_key)
+
+chat_msg = [
+ SystemMessage(content="You are a nice AI bot that helps a user figure out where to travel in one short sentence"),
+ HumanMessage(content="I like the beaches where should I go?"),
+ AIMessage(content="You should go to Nice, France"),
+ HumanMessage(content="What else should I do when I'm there?")
+]
+
+ai_message = chat(chat_msg)
+print(ai_message)
+print()
+print(ai_message.content)
+
+```
 
 ### Augment the Input - PromptEngineering - Semantic Examples
 
@@ -282,7 +355,7 @@ Luckily, this instruction snippet is easy to get from `.get_format_instructions(
   # How you would like your response structured. This is basically a fancy prompt template
   # Like API description for functions, this is Key descriptions of wanted dictionary.
   response_schemas = [
-      ResponseSchema(name="english", description="This a sentence in english."),
+      ResponseSchema(name="english", description="// This a sentence in english."),
       ResponseSchema(name="german", description=" // This e sentence in german.")
   ]
   
@@ -431,46 +504,3 @@ docs = retriever.get_relevant_documents("what types of things did the author wan
 
 print("\n\n".join([x.page_content[:200] for x in docs[:2]]))
 ```
-
-### Process-Oriented Programming
-
-#### Target
-
-Define steps of the LLM processing the an input text and manage them in a procedure-oriented way, like:
-
-```python
-    overall_chain = SimpleSequentialChain(chains=[location_chain, meal_chain], verbose=True)
-    review = overall_chain.run("Rome")
-```
-
-#### Implementation
-
-We define the procedure as `Chain`, superisely, we can use different models for different chains:
-
-```python
-  template = """Your job is to come up with a classic dish from the area that the users suggests.
-  % USER LOCATION
-  {user_location}
-  
-  YOUR RESPONSE:
-  """
-  prompt_template = PromptTemplate(input_variables=["user_location"], template=template)
-  
-  # Holds my 'location' chain
-  location_chain = LLMChain(llm=llm, prompt=prompt_template)
-  
-  # ---
-  
-  template = """Given a meal, give a short and simple recipe on how to make that dish at home.
-  % MEAL
-  {user_meal}
-  
-  YOUR RESPONSE:
-  """
-  prompt_template = PromptTemplate(input_variables=["user_meal"], template=template)
-  
-  # Holds my 'meal' chain
-  meal_chain = LLMChain(llm=llm, prompt=prompt_template)
-
-```
-
