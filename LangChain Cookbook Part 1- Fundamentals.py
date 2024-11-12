@@ -81,6 +81,9 @@ overall_chain = SimpleSequentialChain(chains=[location_chain, meal_chain], verbo
 print(overall_chain.run("Rome"))
 
 
+# function call output
+
+
 def get_current_weather(location, unit):
     return 37.5
 
